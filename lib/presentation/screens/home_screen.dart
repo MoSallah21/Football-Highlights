@@ -253,24 +253,34 @@ class _HighlightsScreenState extends State<HighlightsScreen>
     final screenWidth = MediaQuery.of(context).size.width;
     final isLargeScreen = screenWidth > 1200;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          _buildHeader(isLargeScreen),
-          Expanded(
-            child: BlocConsumer<HighlightsCubit, HighlightsState>(
-              listener: (context, state) {
-                if (state is HighlightsLoaded) {
-                  _ensureCardFocusNodes(state.highlights.length);
-                }
-              },
-              builder: (context, state) {
-                return _buildContent(state, isLargeScreen);
-              },
+    // CRITICAL FIX: Handle back button to exit app
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          // Exit the app when back is pressed
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Column(
+          children: [
+            _buildHeader(isLargeScreen),
+            Expanded(
+              child: BlocConsumer<HighlightsCubit, HighlightsState>(
+                listener: (context, state) {
+                  if (state is HighlightsLoaded) {
+                    _ensureCardFocusNodes(state.highlights.length);
+                  }
+                },
+                builder: (context, state) {
+                  return _buildContent(state, isLargeScreen);
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -833,10 +843,6 @@ class _HighlightsScreenState extends State<HighlightsScreen>
   }
 }
 
-// ============================================================================
-// Helper Widgets - تجنب مشكلة Builder داخل Focus
-// ============================================================================
-
 class _FocusableContainer extends StatefulWidget {
   final FocusNode focusNode;
   final Widget Function(bool hasFocus) builder;
@@ -968,7 +974,6 @@ class _FocusableButtonState extends State<_FocusableButton> {
   }
 }
 
-// Widget خاص للـ SearchBar - بدون Focus wrapper
 class _SearchBarWidget extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
